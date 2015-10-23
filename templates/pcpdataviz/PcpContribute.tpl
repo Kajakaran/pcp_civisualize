@@ -1,5 +1,5 @@
 <h1><span id="nbcontrib"></span> Contributions for a total of <span id="amount"></span></h1>
-<div id="type" style="width:1000px;">
+<div id="type" class="custom_class" style="width:1000px;">
     <strong>Campaigns</strong>
     <a class="reset" href="javascript:pietype.filterAll();dc.redrawAll();" style="display: none;">reset</a>
     <div class="clearfix"></div>
@@ -11,9 +11,15 @@
     <div class="clearfix"></div>
 </div>
 
+
 <div id="day-of-week-chart">
     <strong>Top Donors</strong>
     <a class="reset" href="javascript:dayOfWeekChart.filterAll();dc.redrawAll();" style="display: none;">reset</a>
+    <div class="clearfix"></div>
+</div>
+<div id="project" style="width:250px;">
+    <strong>Campaign Projects</strong>
+    <a class="reset" href="javascript:pieproject.filterAll();dc.redrawAll();" style="display: none;">reset</a>
     <div class="clearfix"></div>
 </div>
 
@@ -45,12 +51,13 @@ style="display: none;">reset</a>
             });
 
             var numberFormat = d3.format(".2f");
-            var volumeChart=null,dayOfWeekChart=null,moveChart=null,pieinstrument,pietype;  
+            var volumeChart=null,dayOfWeekChart=null,moveChart=null,pieinstrument,pietype, pieproject;  
 
             cj(function($) {
                 // create a pie chart under #chart-container1 element using the default global chart group
                 pietype = dc.rowChart("#type");
                 pieinstrument = dc.rowChart("#instrument");
+                pieproject = dc.pieChart("#project").innerRadius(50).radius(150);
                 volumeChart = dc.barChart("#monthly-volume-chart");
                 dayOfWeekChart = dc.rowChart("#day-of-week-chart");
                 //var moveChart = dc.seriesChart("#monthly-move-chart");
@@ -59,6 +66,7 @@ style="display: none;">reset</a>
                 //data.values.forEach(function(d){data.values[i].dd = new Date(d.receive_date)});
                 var pcpNames = getPCPName(data.values);
                 var donorNames = getDonorName(data.values);
+                var projectNames = getProjectName(data.values);
                 
                 data.values.forEach(function(d){d.dd = dateFormat.parse(d.receive_date); d.name = d.page_type;});
                 var min = d3.min(data.values, function(d) { return d.dd;} );
@@ -74,6 +82,9 @@ style="display: none;">reset</a>
 
                 var instrument        = ndx.dimension(function(d) {return d.pcp_id;});
                 var instrumentGroup   = instrument.group().reduceSum(function(d) { return d.count; });
+                
+                var project        = ndx.dimension(function(d) {return d.project_id;});
+                var projectGroup   = project.group().reduceSum(function(d) { return d.amount; });
 
                 var byMonth     = ndx.dimension(function(d) { return d3.time.month(d.dd); });
                 var byDay       = ndx.dimension(function(d) { return d.dd; });
@@ -124,13 +135,13 @@ style="display: none;">reset</a>
                     .margins({top: 20, left: 10, right: 10, bottom: 20})
                     .group(donorGroup)
                     .dimension(donor)
-		    .gap(1)
+                    .gap(1)
                     .colors(d3.scale.category10())
                     .label(function (d) {
                         return donorNames[d.key];
                     })
                     .title(function (d) {
-                        return d.value;
+                        return d.value.toFixed(2);
                     })
                     .data(function (group) {
                         return group.top(20);
@@ -141,40 +152,58 @@ style="display: none;">reset</a>
                 pieinstrument
                     .width(200)
                     .height(420)
-	    .margins({top: 20, left: 10, right: 10, bottom: 20})
+                    .margins({top: 20, left: 10, right: 10, bottom: 20})
                     .dimension(instrument)
                     .group(instrumentGroup)
                     .title(function(d) {
                         return d.value;
                     })
-		     .gap(1)
-		     .colors(d3.scale.category10())
+                    .gap(1)
+                    .colors(d3.scale.category10())
                     .label(function(d) {
                         return pcpNames[d.key];
                     })
                     .data(function (group) {
                         return group.top(20);
                     })
-		    .elasticX(true)
-		    .xAxis().ticks(4);
+                    .elasticX(true)
+                    .xAxis().ticks(4);
+            
+                pieproject
+                    .width(400)
+                    .height(400)
+                    .dimension(project)
+                    .group(projectGroup)
+                    .colors(d3.scale.category10())
+                    .title(function(d) {
+                        return projectNames[d.key]+' : '+d.value.toFixed(2);
+                    })
+                    .label(function(d) {
+                        return projectNames[d.key];
+                    })
+                    .renderlet(function (chart) {
+                    });          
                    
 
                 pietype
                     .width(850)
                     .height(420)
-        .margins({top: 20, left: 10, right: 10, bottom: 20})
+                    .margins({top: 20, left: 10, right: 10, bottom: 20})
                     .dimension(type)
                     .colors(d3.scale.category10())
                     .group(typeGroup)
-           .gap(0)
+                    .gap(1)
                     .label(function (d) {
                         return d.key;
                     })
                     .title(function (d) {
-                        return d.value;
+                        return d.key+" : "+d.value;
                     }) 
-        .elasticX(true)
-                    .xAxis().ticks(4);
+                    .ordering(function(d){ return -d.value;})
+                    .elasticX(false)
+                    .xAxis().ticks(5);
+
+
 
                 //.round(d3.time.month.round)
                 //.interpolate('monotone')
@@ -236,7 +265,20 @@ style="display: none;">reset</a>
       return donornames;
     }
     
+    function getProjectName(data){
+      var projectnames = [];
+      for(var i=0; i<data.length; i++ ){
+        var projectText = data[i]['project'];
+        if (!projectText) {
+            projectText = 'Unknown';
+        }
+        projectnames[data[i]['project_id']] = projectText;
+      }
+      return projectnames;
+    }
+    
     
     {/literal}
 </script>
 <div class="clear"></div>
+
