@@ -97,7 +97,6 @@ style="display: none;">reset</a>
                     return day+"."+name[day]; 
                 }); 
     
-    
 
 
                 var group=ndx.groupAll().reduce(
@@ -115,7 +114,8 @@ style="display: none;">reset</a>
                         return {total:0, count:0};
                     }
                 );
-
+                
+                var maxValue = d3.max( typeGroup );
                 var contribND   = dc.numberDisplay("#nbcontrib")
                     .group(group)
                     .valueAccessor(function (d) {
@@ -182,9 +182,8 @@ style="display: none;">reset</a>
                         return projectNames[d.key];
                     })
                     .renderlet(function (chart) {
-                    });          
-                   
-
+                    });
+                              
                 pietype
                     .width(850)
                     .height(420)
@@ -192,7 +191,8 @@ style="display: none;">reset</a>
                     .dimension(type)
                     .colors(d3.scale.category10())
                     .group(typeGroup)
-                    .gap(1)
+                    
+                    .gap(0)
                     .label(function (d) {
                         return d.key;
                     })
@@ -200,13 +200,14 @@ style="display: none;">reset</a>
                         return d.key+" : "+d.value;
                     }) 
                     .ordering(function(d){ return -d.value;})
-                    .elasticX(false)
-                    .xAxis().ticks(5);
-
-
-
-                //.round(d3.time.month.round)
-                //.interpolate('monotone')
+                    // .elasticX(false)
+                    .x(d3.scale.pow()
+                        .exponent(1 / 5)
+                        .domain([0, 500])
+                        .range([0, 850]))
+                    .xAxis();
+    
+    
                 moveChart.width(850)
                     .height(200)
                     .transitionDuration(1000)
@@ -276,8 +277,6 @@ style="display: none;">reset</a>
       }
       return projectnames;
     }
-    
-    
     {/literal}
 </script>
 <div class="clear"></div>
