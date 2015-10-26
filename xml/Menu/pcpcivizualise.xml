@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<menu>
+  <item>
+    <path>civicrm/pcpdataviz</path>
+    <page_callback>CRM_PCPCivisualize_Page_Main</page_callback>
+    <title>Campaign Detials</title>
+    <access_arguments>access CiviCRM</access_arguments>
+  </item>
+</menu>
